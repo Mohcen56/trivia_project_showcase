@@ -1,0 +1,43 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyi
+*.pyo
+
+# Virtual environments & tooling caches
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets & local config
+.env
+
+
+# Runtime data & uploads
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# Logs & editor cruft
+*.log
+*.swp
+.DS_Store
+Thumbs.db
+
+BACKEND_ARCHITECTURE.md
+fetch_questions.py
+sports_questions.json
+general_questions.json
+geographic_questions.json
+anime_questions.json
+IMAGE_UPLOAD_GUIDE.md
+anime.json
+Video Games.json
+USER_CATEGORIES_GUIDE.md
