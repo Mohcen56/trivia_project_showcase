@@ -4,7 +4,7 @@
 
 <h1 align="center">🎮 Trivia Spirit</h1>
 <p align="center">
-  <a href="https://www.triviaspirit.com">🌐 Live Demo</a> •
+  <a href="https://www.triviaspirit.com">🌐 Live Demo</a> 
   
 </p>
 <p align="center">
