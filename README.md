@@ -12,9 +12,9 @@
   <a href="#features">Features</a> •
   <a href="#tech-stack">Tech Stack</a> •
   <a href="#architecture">Architecture</a> •
-  <a href="#getting-started">Getting Started</a> •
+  <a href="#project-structure">Project Structure</a> •
   <a href="#api-reference">API Reference</a> •
-  <a href="#deployment">Deployment</a>
+  <a href="#security">Security</a>
 </p>
 
 <p align="center">
@@ -23,6 +23,10 @@
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql" alt="PostgreSQL" />
 </p>
+
+---
+
+> **📋 Portfolio Project** – This repository is a code showcase for demonstration purposes. Dependencies and configuration files have been removed. The code is provided for review only and is not intended to be executed.
 
 ---
 
@@ -72,7 +76,6 @@
 | **Cache** | LocMemCache |
 | **Storage** | Cloudflare R2 |
 | **Images** | Pillow + PyVips |
-| **Tasks** | Celery |
 | **Payments** | LemonSqueezy |
 
 ---
@@ -147,89 +150,7 @@ trivia-spirit/
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Frontend:** Node.js 20+
-- **Backend:** Python 3.11+, PostgreSQL 14+, libvips
-
-### Backend Setup
-
-```bash
-cd backend
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run migrations
-python manage.py migrate
-
-# Create admin user
-python manage.py createsuperuser
-
-# Start server
-python manage.py runserver
-```
-
-**Backend Environment Variables (.env):**
-
-```env
-# Django
-SECRET_KEY=your-secret-key
-DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
-
-# Database
-DATABASE_URL=postgres://user:pass@localhost:5432/trivia_spirit
-
-# Cloudflare R2
-CLOUDFLARE_R2_BUCKET=trivia-spirit
-CLOUDFLARE_R2_ACCESS_KEY=your-access-key
-CLOUDFLARE_R2_SECRET_KEY=your-secret-key
-CLOUDFLARE_R2_BUCKET_ENDPOINT=https://xxx.r2.cloudflarestorage.com
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your-google-client-id
-
-# LemonSqueezy
-LEMONSQUEEZY_API_KEY=your-api-key
-LEMONSQUEEZY_WEBHOOK_SECRET=your-webhook-secret
-
-# Email
-ZEPTOMAIL_API_KEY=your-zeptomail-key
-
-# CORS
-CORS_ALLOWED_ORIGINS=http://localhost:3000
-```
-
-### Frontend Setup
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-**Frontend Environment Variables (.env.local):**
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
-NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
-```
-
----
-
-## 📡 API Reference
+##  API Reference
 
 ### Authentication (`/api/auth/`)
 
@@ -416,48 +337,7 @@ Content-Type: application/json
 
 ---
 
-## 🚢 Deployment
-
-### Frontend (Vercel)
-
-```bash
-npm i -g vercel
-vercel
-```
-
-### Backend (Railway)
-
-```bash
-npm i -g @railway/cli
-railway login
-railway up
-```
-
-**Procfile:**
-```
-web: gunicorn trivia_spirit.wsgi --log-file -
-worker: celery -A trivia_spirit worker --loglevel=info
-```
-
-### Production Environment
-
-**Frontend (.env):**
-```env
-NEXT_PUBLIC_API_BASE_URL=https://api.triviaspirit.com
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-production-client-id
-```
-
-**Backend (.env):**
-```env
-DEBUG=False
-ALLOWED_HOSTS=api.triviaspirit.com
-DATABASE_URL=postgres://...
-CORS_ALLOWED_ORIGINS=https://www.triviaspirit.com
-```
-
----
-
-## 📈 Performance
+##  Performance
 
 ### Caching
 
@@ -479,45 +359,6 @@ All uploaded images are automatically:
 - TanStack Query caching (5 min stale time)
 - Redux Persist for offline state
 - Bundle analysis with `npm run analyze`
-
----
-
-## 🧪 Development
-
-### Available Commands
-
-**Backend:**
-```bash
-python manage.py runserver     # Start dev server
-python manage.py migrate       # Run migrations
-python manage.py test          # Run tests
-celery -A trivia_spirit worker # Start Celery worker
-```
-
-**Frontend:**
-```bash
-npm run dev      # Start dev server
-npm run build    # Production build
-npm run lint     # Run ESLint
-npm run analyze  # Bundle analysis
-```
-
-### Debugging Tools
-
-- **React Query Devtools** – Enabled in development
-- **Redux DevTools** – Browser extension
-- **Sentry** – Error tracking in production
-
----
-
-## 📱 Responsive Breakpoints
-
-| Breakpoint | Width | Target |
-|------------|-------|--------|
-| `sm` | 640px+ | Large phones |
-| `md` | 768px+ | Tablets |
-| `lg` | 1024px+ | Laptops |
-| `xl` | 1280px+ | Desktops |
 
 ---
 
