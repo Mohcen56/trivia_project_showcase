@@ -1,0 +1,537 @@
+<p align="center">
+  <img src="frontend/public/logo/logo.png" alt="Trivia Spirit Logo" width="120" />
+</p>
+
+<h1 align="center">🎮 Trivia Spirit</h1>
+
+<p align="center">
+  <strong>The Ultimate Trivia Game for Family & Friends</strong>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#architecture">Architecture</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#api-reference">API Reference</a> •
+  <a href="#deployment">Deployment</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Django-5.1-092E20?logo=django" alt="Django" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql" alt="PostgreSQL" />
+</p>
+
+---
+
+## ✨ Features
+
+### 🎯 Core Gameplay
+- **Team-Based Trivia** – Create teams and compete in real-time trivia battles
+- **Custom Categories** – Browse, create, and save your favorite trivia categories
+- **Thousands of Questions** – Curated questions across history, science, movies, anime, sports & more
+- **Turn-Based System** – Fair turn tracking with team rotation
+
+### 👤 User Experience
+- **Google OAuth** – One-click sign-in with Google
+- **Profile Customization** – Custom avatars with image cropping
+- **Game History** – Track your past games and performance
+- **Responsive Design** – Seamless experience on mobile, tablet & desktop
+
+### 💎 Premium Features
+- **Membership System** – Unlock premium categories and features
+- **LemonSqueezy Integration** – Secure payment processing
+- **Ad-Free Experience** – No interruptions for premium users
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+| Category | Technology |
+|----------|------------|
+| **Framework** | Next.js 16 (App Router) |
+| **UI Library** | React 19 |
+| **Language** | TypeScript 5 |
+| **Styling** | Tailwind CSS 4 |
+| **State** | Redux Toolkit + TanStack Query |
+| **UI Components** | Radix UI + Lucide Icons |
+| **Animations** | Framer Motion |
+| **Monitoring** | Sentry + Vercel Analytics |
+
+### Backend
+
+| Category | Technology |
+|----------|------------|
+| **Framework** | Django 5.1 |
+| **API** | Django REST Framework 3.15 |
+| **Database** | PostgreSQL 16 |
+| **Cache** | LocMemCache |
+| **Storage** | Cloudflare R2 |
+| **Images** | Pillow + PyVips |
+| **Tasks** | Celery |
+| **Payments** | LemonSqueezy |
+
+---
+
+## 🏗 Architecture
+
+### System Overview
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│  React Client   │────▶│  Next.js API    │────▶│  Django Backend │
+│  (Browser)      │     │  (BFF Proxy)    │     │  (REST API)     │
+│                 │     │                 │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+        │                       │                       │
+        │                       │ HttpOnly Cookie       │
+        │                       │ (Auth Token)          │
+        ▼                       ▼                       ▼
+   No token visible      Token attached           PostgreSQL
+   to JavaScript         server-side              + Cloudflare R2
+```
+
+### Backend Apps
+
+| App | Responsibility |
+|-----|----------------|
+| **authentication** | Login, Register, OAuth, Profile, Password Reset |
+| **content** | Categories, Questions, Collections, User CRUD |
+| **gameplay** | Games, Scores, History, Stats |
+| **payments** | LemonSqueezy checkout, Webhooks, Subscriptions |
+
+### Frontend Route Groups
+
+| Route Group | Purpose |
+|-------------|---------|
+| `(auth)` | Login, Signup, Password Reset |
+| `(home)` | Dashboard, Categories, Profile, Settings |
+| `(game)` | Game Board, Questions, Results |
+| `api/` | BFF Proxy Routes, Auth Endpoints |
+
+---
+
+## 📁 Project Structure
+
+```
+trivia-spirit/
+├── frontend/                 # Next.js Frontend
+│   ├── src/
+│   │   ├── app/              # App Router (pages & API routes)
+│   │   │   ├── (auth)/       # Auth pages
+│   │   │   ├── (game)/       # Game pages
+│   │   │   ├── (home)/       # Dashboard, categories, profile
+│   │   │   └── api/          # BFF proxy routes
+│   │   ├── components/       # React components
+│   │   ├── hooks/            # Custom hooks
+│   │   ├── lib/              # API clients & utilities
+│   │   ├── store/            # Redux store
+│   │   └── types/            # TypeScript definitions
+│   └── public/               # Static assets
+│
+└── backend/                  # Django Backend
+    ├── authentication/       # User auth & profiles
+    ├── content/              # Trivia content management
+    ├── gameplay/             # Game logic
+    ├── payments/             # Payment processing
+    ├── middleware/           # Custom middleware
+    ├── helpers/              # Cloudflare utilities
+    ├── utils/                # Shared utilities
+    └── trivia_spirit/        # Django project config
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Frontend:** Node.js 20+
+- **Backend:** Python 3.11+, PostgreSQL 14+, libvips
+
+### Backend Setup
+
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+
+# Create admin user
+python manage.py createsuperuser
+
+# Start server
+python manage.py runserver
+```
+
+**Backend Environment Variables (.env):**
+
+```env
+# Django
+SECRET_KEY=your-secret-key
+DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
+
+# Database
+DATABASE_URL=postgres://user:pass@localhost:5432/trivia_spirit
+
+# Cloudflare R2
+CLOUDFLARE_R2_BUCKET=trivia-spirit
+CLOUDFLARE_R2_ACCESS_KEY=your-access-key
+CLOUDFLARE_R2_SECRET_KEY=your-secret-key
+CLOUDFLARE_R2_BUCKET_ENDPOINT=https://xxx.r2.cloudflarestorage.com
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+
+# LemonSqueezy
+LEMONSQUEEZY_API_KEY=your-api-key
+LEMONSQUEEZY_WEBHOOK_SECRET=your-webhook-secret
+
+# Email
+ZEPTOMAIL_API_KEY=your-zeptomail-key
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+```
+
+### Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+**Frontend Environment Variables (.env.local):**
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
+```
+
+---
+
+## 📡 API Reference
+
+### Authentication (`/api/auth/`)
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/login/` | POST | ❌ | Login with username/password |
+| `/register/` | POST | ❌ | Create new account |
+| `/google-oauth/` | POST | ❌ | Login/register with Google |
+| `/profile/` | GET | ✅ | Get current user profile |
+| `/profile/update/` | PATCH | ✅ | Update profile |
+| `/profile/avatar/` | POST | ✅ | Upload profile avatar |
+| `/change-password/` | POST | ✅ | Change password |
+| `/password-reset/` | POST | ❌ | Request password reset |
+
+**Login Example:**
+
+```http
+POST /api/auth/login/
+Content-Type: application/json
+
+{
+  "username": "player1",
+  "password": "securepass123"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "abc123...",
+  "user": {
+    "id": 1,
+    "username": "player1",
+    "email": "player1@example.com",
+    "avatar_url": "https://cdn.triviaspirit.com/avatars/user1.webp",
+    "is_premium": false
+  }
+}
+```
+
+### Content (`/api/content/`)
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/collections/` | GET | ❌ | List all collections |
+| `/categories/` | GET | ❌ | List public categories |
+| `/categories/` | POST | ✅ | Create custom category |
+| `/categories/{id}/` | GET/PATCH/DELETE | ✅ | Category CRUD |
+| `/categories/{id}/like/` | POST | ✅ | Like/unlike category |
+| `/user-categories/` | GET/POST | ✅ | Saved categories |
+
+**List Categories:**
+
+```http
+GET /api/content/categories/?collection=1&search=anime
+```
+
+**Response:**
+```json
+{
+  "count": 42,
+  "results": [
+    {
+      "id": 1,
+      "name": "Anime Classics",
+      "description": "Questions about classic anime series",
+      "image": "https://cdn.triviaspirit.com/categories/anime.webp",
+      "locked": false,
+      "question_count": 50,
+      "like_count": 234
+    }
+  ]
+}
+```
+
+### Gameplay (`/api/gameplay/`)
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/games/` | POST | ✅ | Create new game |
+| `/games/{id}/` | GET/DELETE | ✅ | Get/delete game |
+| `/games/{id}/answer/` | POST | ✅ | Submit answer |
+| `/games/{id}/end/` | POST | ✅ | End game & save scores |
+| `/stats/` | GET | ✅ | Get user statistics |
+| `/recent/` | GET | ✅ | Get recent games |
+
+**Create Game:**
+
+```http
+POST /api/gameplay/games/
+Content-Type: application/json
+
+{
+  "mode": "offline",
+  "category_ids": [1, 5, 12],
+  "teams": [
+    {"name": "Team Alpha", "avatar": "👑"},
+    {"name": "Team Beta", "avatar": "🔥"}
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "id": 175,
+  "mode": "offline",
+  "teams": [...],
+  "categories": [...],
+  "questions": [
+    {
+      "id": 101,
+      "category_id": 1,
+      "difficulty": "200",
+      "text": "What anime features a boy who finds a notebook...",
+      "choices": ["Death Note", "Naruto", "One Piece", "Bleach"]
+    }
+  ]
+}
+```
+
+### Payments (`/api/payments/`)
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/checkout/` | POST | ✅ | Create checkout session |
+| `/webhook/` | POST | ❌ | LemonSqueezy webhook |
+| `/history/` | GET | ✅ | Payment history |
+
+---
+
+## 📊 Data Models
+
+```
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│      User       │       │   UserProfile   │       │    Category     │
+├─────────────────┤       ├─────────────────┤       ├─────────────────┤
+│ id              │──────▶│ user_id (FK)    │       │ id              │
+│ username        │       │ avatar          │       │ name            │
+│ email           │       │ is_premium      │       │ image           │
+│ password        │       │ premium_expiry  │       │ locked          │
+└─────────────────┘       └─────────────────┘       │ is_custom       │
+        │                                           │ created_by (FK) │
+        │                                           └────────┬────────┘
+        ▼                                                    │
+┌─────────────────┐       ┌─────────────────┐       ┌────────▼────────┐
+│      Game       │       │ PlayedQuestion  │       │    Question     │
+├─────────────────┤       ├─────────────────┤       ├─────────────────┤
+│ id              │──────▶│ game_id (FK)    │       │ id              │
+│ player_id (FK)  │       │ question_id(FK) │◀──────│ category_id     │
+│ mode            │       │ team_index      │       │ text            │
+│ teams (JSON)    │       │ is_correct      │       │ answer          │
+│ categories (M2M)│       │ points          │       │ choices         │
+│ date_played     │       └─────────────────┘       │ difficulty      │
+└─────────────────┘                                 └─────────────────┘
+```
+
+---
+
+## 🔐 Security
+
+### Authentication Flow
+
+```
+1. User logs in → Django returns token
+2. Frontend calls POST /api/auth/set-cookie with token
+3. Next.js sets HttpOnly cookie (token never exposed to JS)
+4. All API calls go through /api/backend/* proxy
+5. Proxy reads cookie, attaches token to Django requests
+6. On logout, cookie is cleared server-side
+```
+
+### Security Features
+
+| Feature | Implementation |
+|---------|----------------|
+| **HttpOnly Cookies** | Auth tokens inaccessible to JavaScript |
+| **BFF Proxy** | Backend URL hidden from client |
+| **Token Auth** | DRF TokenAuthentication |
+| **CORS** | Strict origin validation |
+| **CSRF** | Protected with trusted origins |
+| **SQL Injection** | Django ORM parameterized queries |
+| **File Uploads** | Validated & sanitized |
+
+---
+
+## 🚢 Deployment
+
+### Frontend (Vercel)
+
+```bash
+npm i -g vercel
+vercel
+```
+
+### Backend (Railway)
+
+```bash
+npm i -g @railway/cli
+railway login
+railway up
+```
+
+**Procfile:**
+```
+web: gunicorn trivia_spirit.wsgi --log-file -
+worker: celery -A trivia_spirit worker --loglevel=info
+```
+
+### Production Environment
+
+**Frontend (.env):**
+```env
+NEXT_PUBLIC_API_BASE_URL=https://api.triviaspirit.com
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-production-client-id
+```
+
+**Backend (.env):**
+```env
+DEBUG=False
+ALLOWED_HOSTS=api.triviaspirit.com
+DATABASE_URL=postgres://...
+CORS_ALLOWED_ORIGINS=https://www.triviaspirit.com
+```
+
+---
+
+## 📈 Performance
+
+### Caching
+
+| Cache Key | TTL | Description |
+|-----------|-----|-------------|
+| `game_{id}_board_{hash}` | 10 min | Question board per game |
+| `user_{id}_stats` | 5 min | User statistics |
+| `categories_list` | 5 min | Public categories |
+
+### Image Optimization
+
+All uploaded images are automatically:
+- Converted to WebP format
+- Resized to max 1920px
+- Compressed with quality 85
+
+### Frontend Optimization
+
+- TanStack Query caching (5 min stale time)
+- Redux Persist for offline state
+- Bundle analysis with `npm run analyze`
+
+---
+
+## 🧪 Development
+
+### Available Commands
+
+**Backend:**
+```bash
+python manage.py runserver     # Start dev server
+python manage.py migrate       # Run migrations
+python manage.py test          # Run tests
+celery -A trivia_spirit worker # Start Celery worker
+```
+
+**Frontend:**
+```bash
+npm run dev      # Start dev server
+npm run build    # Production build
+npm run lint     # Run ESLint
+npm run analyze  # Bundle analysis
+```
+
+### Debugging Tools
+
+- **React Query Devtools** – Enabled in development
+- **Redux DevTools** – Browser extension
+- **Sentry** – Error tracking in production
+
+---
+
+## 📱 Responsive Breakpoints
+
+| Breakpoint | Width | Target |
+|------------|-------|--------|
+| `sm` | 640px+ | Large phones |
+| `md` | 768px+ | Tablets |
+| `lg` | 1024px+ | Laptops |
+| `xl` | 1280px+ | Desktops |
+
+---
+
+## 📄 License
+
+This project is proprietary software. See LICENSE files in frontend and backend directories.
+
+---
+
+<p align="center">
+  Built with ❤️ using Next.js, React, Django & TypeScript
+</p>
+
+<p align="center">
+  <a href="https://www.triviaspirit.com">🌐 Live Demo</a> •
+  <a href="https://api.triviaspirit.com">📡 API</a>
+</p>
