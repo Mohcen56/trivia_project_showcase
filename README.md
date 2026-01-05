@@ -1,9 +1,12 @@
 <p align="center">
-  <img src="frontend/public/logo/logo.png" alt="Trivia Spirit Logo" width="120" />
+  <img src="frontend/public/logo/mylogo.svg" alt="My Logo" width="120" />Trivia Spirit Logo" width="120" />
 </p>
 
 <h1 align="center">🎮 Trivia Spirit</h1>
-
+<p align="center">
+  <a href="https://www.triviaspirit.com">🌐 Live Demo</a> •
+  <a href="https://api.triviaspirit.com">📡 API</a>
+</p>
 <p align="center">
   <strong>The Ultimate Trivia Game for Family & Friends</strong>
 </p>
@@ -372,7 +375,4 @@ This project is proprietary software. See LICENSE files in frontend and backend 
   Built with ❤️ using Next.js, React, Django & TypeScript
 </p>
 
-<p align="center">
-  <a href="https://www.triviaspirit.com">🌐 Live Demo</a> •
-  <a href="https://api.triviaspirit.com">📡 API</a>
-</p>
+
