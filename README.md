@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/public/logo/mylogo.svg" alt="My Logo" width="120" />Trivia Spirit Logo" width="120" />
+  <img src="frontend/public/logo/mylogo.svg" alt="Trivia Spirit Logo" width="120" />
 </p>
 
 <h1 align="center">🎮 Trivia Spirit</h1>
