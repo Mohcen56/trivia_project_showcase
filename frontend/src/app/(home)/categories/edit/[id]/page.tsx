@@ -1,5 +1,5 @@
-import Client from './Client';
+import CategoryEditor from './CategoryEditor';
 
 export default function EditCategoryPage() {
-  return <Client />;
+  return <CategoryEditor />;
 }

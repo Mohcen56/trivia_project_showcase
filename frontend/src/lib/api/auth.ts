@@ -1,29 +1,42 @@
 import { api } from './base';
 import { User } from '@/types/game';
 import { clearAuthData } from '@/lib/utils/auth-utils';
+import { logger } from '@/lib/utils/logger';
+
+/** Extracts error message from API error response */
+function extractApiError(error: unknown, fallback: string): string {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const err = error as { response?: { data?: { error?: string; message?: string } } };
+    return err.response?.data?.error || err.response?.data?.message || fallback;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
+
+interface AuthResult<T = undefined> {
+  success: boolean;
+  error?: string;
+  token?: string;
+  user?: User;
+  data?: T;
+}
 
 export const authAPI = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string): Promise<AuthResult> => {
     try {
-      const response = await api.post('/api/auth/login/', {
-        email,
-        password,
-      });
-      
+      const response = await api.post('/api/auth/login/', { email, password });
       return {
         success: true,
         token: response.data.token,
         user: response.data.user,
       };
     } catch (error: unknown) {
-      let errorMessage = 'Login failed';
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const err = error as { response?: { data?: { error?: string } } };
-        errorMessage = err.response?.data?.error || errorMessage;
-      }
+      logger.warn('Login failed', { email, error });
       return {
         success: false,
-        error: errorMessage,
+        error: extractApiError(error, 'Login failed'),
       };
     }
   },
@@ -34,7 +47,7 @@ export const authAPI = {
     username?: string;
     first_name?: string;
     last_name?: string;
-  }) => {
+  }): Promise<AuthResult> => {
     try {
       const response = await api.post('/api/auth/register/', {
         username: userData.username || userData.email,
@@ -43,76 +56,71 @@ export const authAPI = {
         first_name: userData.first_name || '',
         last_name: userData.last_name || ''
       });
-      
       return {
         success: true,
         token: response.data.token,
         user: response.data.user,
       };
     } catch (error: unknown) {
-      let errorMessage = 'Registration failed';
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const err = error as { response?: { data?: { error?: string } } };
-        errorMessage = err.response?.data?.error || errorMessage;
-      }
+      logger.warn('Registration failed', { email: userData.email, error });
       return {
         success: false,
-        error: errorMessage,
+        error: extractApiError(error, 'Registration failed'),
       };
     }
   },
   
-  logout: async () => {
+  logout: async (): Promise<AuthResult> => {
     if (typeof window !== 'undefined') {
       await clearAuthData();
     }
     return { success: true };
   },
   
-  getProfile: async () => {
-    // Updated path after backend modularization (authentication app)
-    const response = await api.get('/api/auth/profile/');
-    return {
-      user: response.data.user,
-    };
-  },
-
-  getCurrentUser: async (): Promise<User> => {
-    const profile = await authAPI.getProfile();
-    return profile.user;
-  },
-
-  updateProfile: async (data: { username?: string; email?: string; first_name?: string; last_name?: string }) => {
+  getProfile: async (): Promise<AuthResult> => {
     try {
-      // Updated path after backend modularization
+      const response = await api.get('/api/auth/profile/');
+      return {
+        success: true,
+        user: response.data.user,
+      };
+    } catch (error: unknown) {
+      logger.warn('Failed to fetch user profile', { error });
+      return {
+        success: false,
+        error: extractApiError(error, 'Failed to fetch profile'),
+      };
+    }
+  },
+
+  getCurrentUser: async (): Promise<User | null> => {
+    const result = await authAPI.getProfile();
+    return result.success ? result.user ?? null : null;
+  },
+
+  updateProfile: async (data: { username?: string; email?: string; first_name?: string; last_name?: string }): Promise<AuthResult> => {
+    try {
       const response = await api.patch('/api/auth/profile/update/', data);
       return {
         success: true,
         user: response.data.user,
       };
     } catch (error: unknown) {
-      let errorMessage = 'Profile update failed';
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const err = error as { response?: { data?: { error?: string } } };
-        errorMessage = err.response?.data?.error || errorMessage;
-      }
+      logger.warn('Profile update failed', { error });
       return {
         success: false,
-        error: errorMessage,
+        error: extractApiError(error, 'Profile update failed'),
       };
     }
   },
 
-  updateProfilePicture: async (imageFile: File) => {
+  updateProfilePicture: async (imageFile: File): Promise<AuthResult & { avatar_url?: string }> => {
     try {
       const formData = new FormData();
       formData.append('avatar', imageFile);
       
-      // Updated path after backend modularization
       const response = await api.patch('/api/auth/profile/avatar/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       
       return {
@@ -121,19 +129,15 @@ export const authAPI = {
         user: response.data.user,
       };
     } catch (error: unknown) {
-      let errorMessage = 'Profile picture update failed';
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const err = error as { response?: { data?: { error?: string } } };
-        errorMessage = err.response?.data?.error || errorMessage;
-      }
+      logger.warn('Profile picture update failed', { error });
       return {
         success: false,
-        error: errorMessage,
+        error: extractApiError(error, 'Profile picture update failed'),
       };
     }
   },
 
-  changePassword: async (currentPassword: string, newPassword: string) => {
+  changePassword: async (currentPassword: string, newPassword: string): Promise<AuthResult & { message?: string }> => {
     try {
       const response = await api.post('/api/auth/change-password/', {
         current_password: currentPassword,
@@ -145,19 +149,15 @@ export const authAPI = {
         message: response.data.message || 'Password changed successfully',
       };
     } catch (error: unknown) {
-      let errorMessage = 'Password change failed';
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const err = error as { response?: { data?: { error?: string; detail?: string } } };
-        errorMessage = err.response?.data?.error || err.response?.data?.detail || errorMessage;
-      }
+      logger.warn('Password change failed', { error });
       return {
         success: false,
-        error: errorMessage,
+        error: extractApiError(error, 'Password change failed'),
       };
     }
   },
 
-  googleOAuth: async (googleToken: string) => {
+  googleOAuth: async (googleToken: string): Promise<AuthResult & { is_new?: boolean }> => {
     try {
       const response = await api.post('/api/auth/google-oauth/', {
         token: googleToken,
@@ -170,14 +170,10 @@ export const authAPI = {
         is_new: response.data.is_new,
       };
     } catch (error: unknown) {
-      let errorMessage = 'Google login failed';
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const err = error as { response?: { data?: { error?: string } } };
-        errorMessage = err.response?.data?.error || errorMessage;
-      }
+      logger.warn('Google OAuth failed', { error });
       return {
         success: false,
-        error: errorMessage,
+        error: extractApiError(error, 'Google login failed'),
       };
     }
   },

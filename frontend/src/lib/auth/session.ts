@@ -1,12 +1,16 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
+import { logger } from '@/lib/utils/logger';
 import type { User, AuthSession, NoAuthSession, Session } from './types';
 
 // Re-export types for convenience
 export type { User, AuthSession, NoAuthSession, Session };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+/** Request timeout in milliseconds */
+const REQUEST_TIMEOUT = 5000;
 
 /**
  * Get the auth token from cookies (server-side only)
@@ -35,6 +39,10 @@ export const getServerUser = cache(async (): Promise<User | null> => {
     return null;
   }
 
+  // Create AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/auth/profile/`, {
       headers: {
@@ -42,7 +50,10 @@ export const getServerUser = cache(async (): Promise<User | null> => {
         'Content-Type': 'application/json',
       },
       cache: 'no-store', // Don't cache authenticated requests
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return null;
@@ -56,7 +67,13 @@ export const getServerUser = cache(async (): Promise<User | null> => {
       avatar: user.avatar || '/avatars/thumbs.svg',
     } as User;
   } catch (error) {
-    console.error('Failed to fetch user profile:', error);
+    clearTimeout(timeoutId);
+    
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.warn('User profile fetch timed out', { timeout: REQUEST_TIMEOUT });
+    } else {
+      logger.warn('Failed to fetch user profile', { error });
+    }
     return null;
   }
 });

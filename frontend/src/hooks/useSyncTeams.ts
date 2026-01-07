@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppDispatch } from '@/store/hooks';
 import { setTeams } from '@/store/gameSlice';
 import { Team } from '@/types/game';
@@ -12,33 +12,39 @@ export function useSyncTeams(
   liveTeams: Team[]
 ) {
   const dispatch = useAppDispatch();
+  
+  // Keep stable reference to liveTeams to avoid infinite loops
+  const liveTeamsRef = useRef(liveTeams);
+  liveTeamsRef.current = liveTeams;
 
   useEffect(() => {
     if (!teamsFromGame || teamsFromGame.length === 0) return;
 
+    const currentLiveTeams = liveTeamsRef.current;
+
     // Merge backend teams with current Redux teams (keep scores)
     const mergedTeams = teamsFromGame.map((t: Team) => {
-      const existing = liveTeams.find(et => et.id === t.id);
+      const existing = currentLiveTeams.find(et => et.id === t.id);
       return { ...t, score: existing?.score ?? t.score ?? 0 };
     });
 
     // If Redux is empty, set immediately
-    if (liveTeams.length === 0) {
+    if (currentLiveTeams.length === 0) {
       dispatch(setTeams(mergedTeams));
       return;
     }
 
     // Detect roster changes (id, name, or avatar differences)
     const rosterChanged =
-      mergedTeams.length !== liveTeams.length ||
+      mergedTeams.length !== currentLiveTeams.length ||
       mergedTeams.some((t, i) =>
-        t.id !== liveTeams[i]?.id ||
-        t.name !== liveTeams[i]?.name ||
-        t.avatar !== liveTeams[i]?.avatar
+        t.id !== currentLiveTeams[i]?.id ||
+        t.name !== currentLiveTeams[i]?.name ||
+        t.avatar !== currentLiveTeams[i]?.avatar
       );
 
     if (rosterChanged) {
       dispatch(setTeams(mergedTeams));
     }
-  }, [teamsFromGame, liveTeams, dispatch]);
+  }, [teamsFromGame, dispatch]); // Removed liveTeams from deps, using ref instead
 }

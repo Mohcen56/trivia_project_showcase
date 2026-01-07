@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { categoriesAPI } from '@/lib/api';
 import { useImageError } from '@/hooks/useImageError';
 import { useHeader } from '@/contexts/HeaderContext';
+import { useSession } from '@/providers/SessionProvider';
 import BounceLoader from '@/components/ui/loadingscreen';
 
 type AllCategoryData = {
@@ -21,15 +22,13 @@ type AllCategoryData = {
   fallback_categories: Category[];
 };
 
-type Props = {
+interface CategoriesListProps {
   initialData: AllCategoryData | null;
-  userIsPremium: boolean;
-  userId: number;
-};
+}
 
-export default function CategoriesList({ initialData, userIsPremium, userId }: Props) {
-  // Premium status and userId come from server-side session
-  const currentUserId = userId;
+export default function CategoriesList({ initialData }: CategoriesListProps) {
+  const { user, isPremium } = useSession();
+  const currentUserId = user?.id ?? 0;
   const [error, setError] = useState<string>('');
   const notify = useNotification();
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
@@ -166,7 +165,7 @@ export default function CategoriesList({ initialData, userIsPremium, userId }: P
   };
 
   const handleCategoryToggle = (categoryId: number, categoryIsPremium: boolean) => {
-    if (categoryIsPremium && !userIsPremium) {
+    if (categoryIsPremium && !isPremium) {
       setError('This category is available for premium members only');
       return;
     }
@@ -325,7 +324,7 @@ export default function CategoriesList({ initialData, userIsPremium, userId }: P
                   {collection.categories?.map((category) => {
                     const isSelected = selectedCategories.includes(category.id);
                     const categoryIsPremium = category.is_premium;
-                    const canSelect = !categoryIsPremium || userIsPremium;
+                    const canSelect = !categoryIsPremium || isPremium;
                     const isLocked = !isSelected && selectedCategories.length >= 6; // Lock unselected categories when 6 are selected
                     const playedPercent = getPlayedPercentage(category);
                 return (
@@ -421,7 +420,7 @@ export default function CategoriesList({ initialData, userIsPremium, userId }: P
                           </div>
                         )}
                         {/* Locked Overlay */}
-                        {categoryIsPremium && !userIsPremium && (
+                        {categoryIsPremium && !isPremium && (
                           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center z-10">
                             <Lock className="h-8 w-8 text-white mb-2" />
                             <span className="text-white text-xs font-semibold">Premium</span>

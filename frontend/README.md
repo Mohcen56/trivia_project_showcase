@@ -88,6 +88,30 @@ All API calls are proxied through Next.js API routes, keeping authentication tok
    to JavaScript         server-side
 ```
 
+### Server-Side Session Management
+
+User authentication and premium membership are handled entirely on the server:
+
+```
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│   Root Layout         │     │   getSession()        │     │   Django Backend      │
+│   (Server Component)  │────▶│   lib/auth/session.ts  │────▶│   /api/auth/profile/  │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+        │                               │
+        │ { user, isPremium }           │ Validates premium expiry
+        ▼                               ▼
+┌─────────────────────┐     ┌─────────────────────┐
+│   SessionProvider     │     │   Client Components   │
+│   (Client Context)    │────▶│   useSession() hook    │
+└─────────────────────┘     └─────────────────────┘
+```
+
+**Key Benefits:**
+- ✅ No client-side auth API calls on page load
+- ✅ Premium expiry validated server-side before rendering
+- ✅ Fresh user data on every server render (no stale cache)
+- ✅ React `cache()` for request deduplication
+
 ### Route Groups
 
 The app uses Next.js route groups for logical organization:
@@ -101,57 +125,6 @@ The app uses Next.js route groups for logical organization:
 
 ---
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- npm or yarn
-- Django backend running (see backend README)
-
-### Environment Variables
-
-Create a `.env.local` file:
-
-```env
-# Backend API URL
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
-
-# Google OAuth
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
-
-# Sentry (optional)
-NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
-SENTRY_AUTH_TOKEN=your-sentry-auth-token
-```
-
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-### Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Create optimized production build |
-| `npm start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run analyze` | Analyze bundle size |
-
----
 
 ## 📁 Project Structure
 
@@ -200,13 +173,15 @@ src/
 │   │   ├── categories.ts     # Categories CRUD
 │   │   ├── games.ts          # Game management
 │   │   └── questions.ts      # Question fetching
+│   ├── auth/                 # Server-side auth utilities
+│   │   ├── session.ts        # getSession(), getServerUser()
+│   │   └── types.ts          # Session & Auth types
+│   ├── config/               # Configuration
+│   │   └── constants.ts      # Centralized app constants
 │   └── utils/                # Utility functions
 │       ├── auth-utils.ts     # Auth helpers (cookie-based)
 │       ├── logger.ts         # Structured logging
 │       └── cn.ts             # Tailwind class merger
-│
-├── lib/config/               # Configuration
-│   └── constants.ts          # Centralized app constants
 │
 ├── store/                    # Redux Store
 │   ├── index.ts              # Store configuration
@@ -345,7 +320,34 @@ const { data, isLoading } = useQuery({
 User session data is fetched server-side and provided via React Context:
 
 ```typescript
-// Root layout fetches session
+// lib/auth/session.ts - Server-side session fetching
+export const getServerUser = cache(async (): Promise<User | null> => {
+  const token = await getAuthToken();
+  if (!token) return null;
+  
+  const response = await fetch(`${API_BASE_URL}/api/auth/profile/`, {
+    headers: { 'Authorization': `Token ${token}` },
+    cache: 'no-store',
+  });
+  return response.ok ? await response.json() : null;
+});
+
+export async function getSession(): Promise<Session> {
+  const user = await getServerUser();
+  if (user) {
+    let isPremium = !!user.is_premium;
+    // Validate premium expiry server-side
+    if (isPremium && user.premium_expiry) {
+      isPremium = new Date(user.premium_expiry) > new Date();
+    }
+    return { user, isAuthenticated: true, isPremium };
+  }
+  return { user: null, isAuthenticated: false, isPremium: false };
+}
+```
+
+```typescript
+// Root layout fetches session server-side
 export default async function RootLayout({ children }) {
   const session = await getSession();
   return (
@@ -355,9 +357,9 @@ export default async function RootLayout({ children }) {
   );
 }
 
-// Any component can access user data
+// Any client component can access session data
 function MyComponent() {
-  const { user, isPremium } = useSession();
+  const { user, isPremium, isAuthenticated } = useSession();
   // Fresh data on every server render, no stale Redux cache
 }
 ```
@@ -367,7 +369,7 @@ function MyComponent() {
 GoogleOAuthProvider
   └── QueryProvider (TanStack Query)
         └── ReduxProvider (Redux Toolkit)
-              └── SessionProvider (User Context)
+              └── SessionProvider (Server → Client Context)
                     └── ErrorBoundary
                           └── NotificationProvider
                                 └── {children}

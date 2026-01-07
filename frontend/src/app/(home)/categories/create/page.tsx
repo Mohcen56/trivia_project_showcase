@@ -1,8 +1,8 @@
-import { getSession } from '@/lib/auth';
-import Client from './Client';
+import { requireAuth } from '@/lib/auth';
+import CategoryCreator from './CategoryCreator';
 
 export default async function CreateCategoryPage() {
-  const session = await getSession();
+  await requireAuth();
   
-  return <Client userIsPremium={session.isPremium} />;
+  return <CategoryCreator />;
 }

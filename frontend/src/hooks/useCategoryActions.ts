@@ -5,8 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { gameAPI } from '@/lib/api';
 import { useNotification } from '@/hooks/useNotification';
 import { logger } from '@/lib/utils/logger';
-import { useMembership } from '@/hooks/useMembership';
-import { useAuthGate } from '@/hooks/useAuthGate';
+import { useSession } from '@/providers/SessionProvider';
 
 interface UseCategoryActionsProps {
   categoryId: string;
@@ -46,8 +45,10 @@ export function useCategoryActions({
   const router = useRouter();
   const queryClient = useQueryClient();
   const notify = useNotification();
-  const { membership } = useMembership();
-  const { user } = useAuthGate();
+  const { user, isPremium } = useSession();
+  
+  // Create membership-like object for backward compatibility
+  const membership = user ? { is_premium: isPremium } : null;
 
   const handleSave = async (): Promise<boolean> => {
     try {

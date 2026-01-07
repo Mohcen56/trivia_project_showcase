@@ -23,10 +23,12 @@ const protectedRoutes = [
 ];
 
 // Routes that should redirect TO home if already authenticated
-const authRoutes = ['/login', '/signup', '/ForgotPassword', '/ResetPassword'];
+// Using lowercase for consistent matching
+const authRoutes = ['/login', '/signup', '/forgotpassword', '/resetpassword'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const normalizedPath = pathname.toLowerCase(); // Normalize for case-insensitive matching
   const authToken = request.cookies.get('authToken')?.value;
 
   // Skip proxy for API routes, static files, etc.
@@ -41,7 +43,7 @@ export function proxy(request: NextRequest) {
 
   // Check if accessing a protected route without auth
   const isProtectedRoute = protectedRoutes.some(route => 
-    pathname === route || pathname.startsWith(`${route}/`)
+    normalizedPath === route || normalizedPath.startsWith(`${route}/`)
   );
 
   if (isProtectedRoute && !authToken) {
@@ -52,7 +54,7 @@ export function proxy(request: NextRequest) {
 
   // Check if accessing auth routes while already authenticated
   const isAuthRoute = authRoutes.some(route => 
-    pathname === route || pathname.startsWith(`${route}/`)
+    normalizedPath === route || normalizedPath.startsWith(`${route}/`)
   );
   
   if (isAuthRoute && authToken) {

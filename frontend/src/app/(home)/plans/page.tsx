@@ -1,11 +1,10 @@
-import { getSession } from "@/lib/auth";
-import Client from "./Client";
+import { requireAuth } from "@/lib/auth";
+import PricingPlans from "./PricingPlans";
 
 export default async function PricingPage() {
-  const session = await getSession();
+  await requireAuth();
   
-  // Pass premium status from server
-  return <Client userIsPremium={session.isPremium} />;
+  return <PricingPlans />;
 }
 
 

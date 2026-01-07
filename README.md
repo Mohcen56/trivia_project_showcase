@@ -102,6 +102,24 @@
    to JavaScript         server-side              + Cloudflare R2
 ```
 
+### Server-Side Session Management
+
+User authentication and premium membership are handled entirely on the server:
+
+| Step | Description |
+|------|-------------|
+| 1. Root Layout | Server Component calls `getSession()` |
+| 2. Session Fetch | `getServerUser()` reads HttpOnly cookie, fetches user from Django |
+| 3. Premium Validation | Expiry date checked server-side before rendering |
+| 4. Context Injection | Session passed to `SessionProvider` as props |
+| 5. Client Access | Components use `useSession()` hook for user data |
+
+**Benefits:**
+- ✅ No client-side auth API calls on page load
+- ✅ Premium expiry validated server-side
+- ✅ Fresh user data on every server render
+- ✅ React `cache()` for request deduplication
+
 ### Backend Apps
 
 | App | Responsibility |
@@ -126,29 +144,136 @@
 
 ```
 trivia-spirit/
-├── frontend/                 # Next.js Frontend
+├── frontend/                      # Next.js Frontend
 │   ├── src/
-│   │   ├── app/              # App Router (pages & API routes)
-│   │   │   ├── (auth)/       # Auth pages
-│   │   │   ├── (game)/       # Game pages
-│   │   │   ├── (home)/       # Dashboard, categories, profile
-│   │   │   └── api/          # BFF proxy routes
-│   │   ├── components/       # React components
-│   │   ├── hooks/            # Custom hooks
-│   │   ├── lib/              # API clients & utilities
-│   │   ├── store/            # Redux store
-│   │   └── types/            # TypeScript definitions
-│   └── public/               # Static assets
+│   │   ├── app/                   # Next.js App Router
+│   │   │   ├── (auth)/            # Auth pages
+│   │   │   │   ├── login/         # Login page
+│   │   │   │   ├── signup/        # Registration page
+│   │   │   │   ├── ForgotPassword/# Password recovery
+│   │   │   │   └── ResetPassword/ # Password reset
+│   │   │   ├── (game)/            # Game pages
+│   │   │   │   └── game/[id]/     # Dynamic game routes
+│   │   │   ├── (home)/            # Main app pages
+│   │   │   │   ├── categories/    # Browse & create categories
+│   │   │   │   ├── dashboard/     # User dashboard
+│   │   │   │   ├── history/       # Game history
+│   │   │   │   ├── plans/         # Subscription plans
+│   │   │   │   ├── profile/       # User profile
+│   │   │   │   ├── teams/         # Team setup
+│   │   │   │   ├── privacy/       # Privacy policy
+│   │   │   │   ├── terms/         # Terms of service
+│   │   │   │   └── refund/        # Refund policy
+│   │   │   └── api/               # API Routes (BFF)
+│   │   │       ├── auth/          # Auth cookie management
+│   │   │       ├── backend/       # Catch-all proxy to Django
+│   │   │       └── proxy/         # Request proxy utilities
+│   │   │
+│   │   ├── components/            # React Components
+│   │   │   ├── ui/                # Base UI (buttons, dialogs, inputs)
+│   │   │   ├── ads/               # Advertisement components (AdUnit)
+│   │   │   ├── category/          # Category display & forms
+│   │   │   ├── game/              # Game UI (board, answers, teams)
+│   │   │   ├── skeletons/         # Loading skeleton components
+│   │   │   ├── utils/             # ErrorBoundary, ImageCropModal, ReduxProvider
+│   │   │   ├── User/              # Login/signup forms, profile components
+│   │   │   ├── Premium/           # Premium dashboard
+│   │   │   ├── Header.tsx         # App header
+│   │   │   ├── HeaderAvatar.tsx   # User avatar in header
+│   │   │   └── HeroCTA.tsx        # Landing page hero
+│   │   │
+│   │   ├── hooks/                 # Custom React Hooks
+│   │   │   ├── useCategoriesData.ts    # Categories fetching
+│   │   │   ├── useCategoryActions.ts   # Category CRUD actions
+│   │   │   ├── useCategoryData.ts      # Single category data
+│   │   │   ├── useGameData.ts          # Game state management
+│   │   │   ├── useImageError.ts        # Image loading fallbacks
+│   │   │   ├── useNotification.ts      # Toast notifications
+│   │   │   ├── useReroll.ts            # Question reroll logic
+│   │   │   ├── useSafeAction.ts        # Safe async actions
+│   │   │   ├── useSyncTeams.ts         # Team synchronization
+│   │   │   ├── useTurnTracking.ts      # Team turn management
+│   │   │   └── useUserCategories.ts    # User's saved categories
+│   │   │
+│   │   ├── lib/                   # Utilities & API
+│   │   │   ├── api/               # Axios API clients
+│   │   │   │   ├── base.ts        # Axios instance (BFF proxy)
+│   │   │   │   ├── auth.ts        # Auth endpoints
+│   │   │   │   ├── categories.ts  # Categories CRUD
+│   │   │   │   ├── games.ts       # Game management
+│   │   │   │   ├── questions.ts   # Question fetching
+│   │   │   │   ├── result.ts      # Game results
+│   │   │   │   └── user-categories.ts # Saved categories
+│   │   │   ├── auth/              # Server-side auth
+│   │   │   │   ├── session.ts     # getSession(), getServerUser()
+│   │   │   │   ├── actions.ts     # Server actions
+│   │   │   │   └── types.ts       # Session & auth types
+│   │   │   ├── config/            # Configuration
+│   │   │   │   └── constants.ts   # Centralized app constants
+│   │   │   └── utils/             # Utility functions
+│   │   │       ├── auth-utils.ts  # Auth helpers
+│   │   │       ├── errorTracking.ts # Sentry integration
+│   │   │       ├── google-oauth.ts  # Google OAuth utils
+│   │   │       ├── imageUtils.ts    # Image processing
+│   │   │       ├── logger.ts        # Structured logging
+│   │   │       ├── notificationService.ts # Toast service
+│   │   │       ├── payments.ts      # Payment utilities
+│   │   │       └── utils.ts         # General utilities
+│   │   │
+│   │   ├── providers/             # React Context Providers
+│   │   │   ├── Providers.tsx      # Unified provider wrapper
+│   │   │   ├── SessionProvider.tsx # Server → Client session
+│   │   │   ├── QueryProvider.tsx  # TanStack Query
+│   │   │   └── NotificationProvider.tsx
+│   │   │
+│   │   ├── contexts/              # React Contexts
+│   │   │   └── HeaderContext.tsx  # Header state context
+│   │   │
+│   │   ├── store/                 # Redux Store
+│   │   │   ├── index.ts           # Store configuration
+│   │   │   ├── authSlice.ts       # Auth state
+│   │   │   ├── gameSlice.ts       # Game state
+│   │   │   └── hooks.ts           # Typed Redux hooks
+│   │   │
+│   │   └── types/                 # TypeScript Definitions
+│   │       └── game.ts            # Game, User, Category types
+│   │
+│   └── public/                    # Static assets
+│       ├── avatars/               # Avatar images
+│       ├── icons/                 # App icons
+│       └── logo/                  # Logo assets
 │
-└── backend/                  # Django Backend
-    ├── authentication/       # User auth & profiles
-    ├── content/              # Trivia content management
-    ├── gameplay/             # Game logic
-    ├── payments/             # Payment processing
-    ├── middleware/           # Custom middleware
-    ├── helpers/              # Cloudflare utilities
-    ├── utils/                # Shared utilities
-    └── trivia_spirit/        # Django project config
+└── backend/                       # Django Backend
+    ├── authentication/            # User auth & profiles
+    │   ├── models.py              # User, UserProfile
+    │   ├── views.py               # Login, Register, OAuth, Profile
+    │   ├── serializers.py         # DRF serializers
+    │   └── urls.py                # Auth endpoints
+    ├── content/                   # Trivia content management
+    │   ├── models.py              # Category, Question, Collection
+    │   ├── views.py               # Categories CRUD, Questions
+    │   ├── serializers.py         # Content serializers
+    │   ├── permissions.py         # Custom permissions
+    │   └── image_optimizer.py     # WebP conversion
+    ├── gameplay/                  # Game logic
+    │   ├── models.py              # Game, PlayedQuestion
+    │   ├── views.py               # Game creation, scoring
+    │   └── serializers.py         # Game serializers
+    ├── payments/                  # Payment processing
+    │   ├── views.py               # Checkout, webhooks
+    │   └── lemonsqueezy_client.py # LemonSqueezy API
+    ├── middleware/                # Custom middleware
+    │   └── logging_middleware.py  # Request logging
+    ├── helpers/                   # External services
+    │   └── cloudflare/            # R2 storage utilities
+    ├── utils/                     # Shared utilities
+    │   ├── responses.py           # Standard API responses
+    │   └── zeptomail_backend.py   # Email service
+    └── trivia_spirit/             # Django project config
+        ├── settings.py            # Django settings
+        ├── urls.py                # Root URL config
+        ├── celery.py              # Celery configuration
+        └── wsgi.py                # WSGI entry point
 ```
 
 ---
@@ -321,9 +446,11 @@ Content-Type: application/json
 1. User logs in → Django returns token
 2. Frontend calls POST /api/auth/set-cookie with token
 3. Next.js sets HttpOnly cookie (token never exposed to JS)
-4. All API calls go through /api/backend/* proxy
-5. Proxy reads cookie, attaches token to Django requests
-6. On logout, cookie is cleared server-side
+4. Root layout calls getSession() → fetches user server-side
+5. Premium expiry validated server-side before rendering
+6. Session passed to SessionProvider → available via useSession()
+7. All API calls go through /api/backend/* proxy
+8. On logout, cookie is cleared server-side
 ```
 
 ### Security Features
@@ -331,6 +458,8 @@ Content-Type: application/json
 | Feature | Implementation |
 |---------|----------------|
 | **HttpOnly Cookies** | Auth tokens inaccessible to JavaScript |
+| **Server-Side Auth** | User/premium status fetched in Server Components |
+| **Premium Validation** | Expiry checked server-side, not client |
 | **BFF Proxy** | Backend URL hidden from client |
 | **Token Auth** | DRF TokenAuthentication |
 | **CORS** | Strict origin validation |

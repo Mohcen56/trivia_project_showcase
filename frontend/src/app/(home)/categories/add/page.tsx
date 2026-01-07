@@ -1,8 +1,8 @@
 import { requireAuth } from '@/lib/auth';
-import Client from './Client';
+import AddedCategoriesBrowser from './AddedCategoriesBrowser';
 
-export default async function addcategories() {
-  const session = await requireAuth();
+export default async function AddCategoriesPage() {
+  await requireAuth();
   
-  return <Client userIsPremium={session.isPremium} userId={session.user.id} />;
+  return <AddedCategoriesBrowser />;
 }

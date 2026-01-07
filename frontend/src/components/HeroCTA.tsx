@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useAuthGate } from "@/hooks/useAuthGate";
+import { useSession } from "@/providers/SessionProvider";
 
 export default function HeroCTA() {
-  const { user } = useAuthGate();
+  const { user } = useSession();
   const router = useRouter();
 
   const handleClick = () => {

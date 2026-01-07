@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { VerifyBadge } from '@/components/ui/verify-badge';
 import { AnimatedBadge } from '@/components/ui/animatedbadge';
 import { useUserCategories } from '@/hooks/useUserCategories';
-import { useMembership } from '@/hooks/useMembership';
+import { useSession } from '@/providers/SessionProvider';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';
 
 interface User {
@@ -25,7 +25,7 @@ interface UserProfileProps {
 
 export default function UserProfile({ user, onBack }: UserProfileProps) {
   const router = useRouter();
-  const { membership, isLoaded } = useMembership(); // ✅ get membership info
+  const { isPremium } = useSession();
   const { userCategories, isLoadingCategories, approvedCategoriesCount, creatorBadge } = useUserCategories(user.id);
   const [formData] = useState({
     username: user.username,
@@ -98,7 +98,7 @@ export default function UserProfile({ user, onBack }: UserProfileProps) {
           </h2>
           <div className="flex items-center space-x-2">
           {/* Premium Badge */}
-          {isLoaded && (membership?.is_premium || user?.is_premium) && (
+          {(isPremium || user?.is_premium) && (
             <VerifyBadge type="premium" size="md" showLabel={showBadgeLabel} />
           )}
 

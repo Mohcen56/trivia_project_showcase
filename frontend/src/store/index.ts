@@ -35,7 +35,7 @@ const gamePersistConfig = {
 const authPersistConfig = {
   key: 'trivia-spirit-auth',
   storage,
-  whitelist: ['token', 'user'],
+  whitelist: ['user'], // Token is NOT stored in Redux - uses HttpOnly cookies
 };
 
 const persistedGameReducer = persistReducer(gamePersistConfig, gameReducer);
