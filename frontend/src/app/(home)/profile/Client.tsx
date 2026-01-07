@@ -1,24 +1,29 @@
 "use client";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import UserProfile from "@/components/User/UserProfile";
-import { useAuthGate } from "@/hooks/useAuthGate";
 import { authAPI } from "@/lib/api/auth";
 import { logger } from '@/lib/utils/logger';
 import { useNotification } from '@/hooks/useNotification';
-import BounceLoader from '@/components/ui/loadingscreen';
 import { useAppDispatch } from '@/store/hooks';
 import { setCredentials } from '@/store/authSlice';
+import { refreshUserAction } from '@/lib/auth/actions';
+import type { User } from '@/lib/auth/types';
 
-export default function Client() {
+interface ProfileClientProps {
+  initialUser: User;
+}
+
+export default function ProfileClient({ initialUser }: ProfileClientProps) {
   const router = useRouter();
-  const { user, setUser, isLoading } = useAuthGate({ redirectIfGuest: '/login' });
+  const [user, setUser] = useState(initialUser);
   const notify = useNotification();
   const dispatch = useAppDispatch();
 
   // Helper to update both local state and Redux store
-  const updateUserEverywhere = (updatedUser: any) => {
+  const updateUserEverywhere = (updatedUser: User) => {
     setUser(updatedUser);
-    // ✅ SECURITY: No need to pass token - it's in HttpOnly cookie
+    // Update Redux store for client components that need it
     dispatch(setCredentials({ user: updatedUser }));
   };
 
@@ -110,8 +115,10 @@ export default function Client() {
         try {
           const result = await authAPI.getProfile();
           if (result.user) {
-            updateUserEverywhere(result.user);
+            updateUserEverywhere(result.user as User);
           }
+          // Invalidate server-side cache
+          await refreshUserAction();
         } catch (error) {
           logger.warn('Failed to refetch user profile after save', error);
           // Don't fail the entire operation if refetch fails
@@ -126,14 +133,6 @@ export default function Client() {
       return false; // Return false on exception
     }
   };
-
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-zinc-500">
-        <BounceLoader />
-      </div>
-    );
-  }
 
   return (
     <UserProfile

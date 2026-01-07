@@ -1,6 +1,9 @@
+import { requireAuth } from '@/lib/auth';
 import CategoriesList from './CategoriesList';
 
-// Client-side fetch - auth token is attached via API proxy from HttpOnly cookie
-export default function CategoriesPage() {
-  return <CategoriesList initialData={null} />;
+// Server-side auth check - proxy will also redirect but this is a fallback
+export default async function CategoriesPage() {
+  const session = await requireAuth();
+  
+  return <CategoriesList initialData={null} userIsPremium={session.isPremium} userId={session.user.id} />;
 }

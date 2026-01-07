@@ -7,11 +7,13 @@ import { Pencil, Star } from "lucide-react";
 import { useHeader } from "@/contexts/HeaderContext";
 import { createCheckout, redirectToCheckout } from "@/lib/utils/payments";
 import { useRouter } from "next/navigation";
-import { useMembership } from "@/hooks/useMembership";
-import { useAuthGate } from "@/hooks/useAuthGate";
 import { PremiumDashboard } from "@/components/Premium/PremiumDashboard";
 import Link from "next/link";
 import { logger } from "@/lib/utils/logger";
+
+interface Props {
+  userIsPremium: boolean;
+}
  
 
 const sampleTiers: PricingTier[] = [
@@ -60,19 +62,17 @@ const sampleTiers: PricingTier[] = [
   // },
 ];
 
-export default function Client() {
+export default function Client({ userIsPremium }: Props) {
     const { setHeader } = useHeader();
     const router = useRouter();
     const [isProcessing, setIsProcessing] = useState(false);
-    const { membership } = useMembership();
-  const { user } = useAuthGate();
     
      useEffect(() => {
     setHeader({ title: "Level Up Your Trivia Experience", backHref: "/dashboard" });
   }, [setHeader]);
 
-  // Show Premium Dashboard if user is premium
-  if (membership?.is_premium || user?.is_premium) {
+  // Show Premium Dashboard if user is premium (checked on server)
+  if (userIsPremium) {
     return <PremiumDashboard />;
   }
 

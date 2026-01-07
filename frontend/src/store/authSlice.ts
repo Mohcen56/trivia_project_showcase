@@ -1,4 +1,5 @@
 import { AnyAction, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { User } from '@/types/game'
 import { REHYDRATE } from 'redux-persist';
 
 /**
@@ -6,7 +7,7 @@ import { REHYDRATE } from 'redux-persist';
  * Redux only stores the user profile for UI purposes.
  */
 export interface AuthState {
-  user: any | null;
+  user: User | null;
   isLoaded: boolean;
 }
 
@@ -19,7 +20,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ user?: any | null }>) => {
+    setCredentials: (state, action: PayloadAction<{ user?: User | null }>) => {
       state.user = action.payload.user ?? null;
       state.isLoaded = true;
     },

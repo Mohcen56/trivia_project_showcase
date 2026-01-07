@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { logger } from "@/lib/utils/logger";
-import { API_BASE_URL } from "@/lib/api/base";
+import { forgotPasswordAction } from "@/lib/auth/actions";
 import Image from "next/image";
 
 export default function ForgotPassword() {
@@ -13,31 +12,18 @@ export default function ForgotPassword() {
     e.preventDefault();
     if (!email) return;
 
-    // Ensure API base is configured before attempting the request
-    if (!API_BASE_URL) {
-      setMessage("Service is temporarily unavailable. Please contact support.");
-      return;
-    }
-
-    const baseUrl = API_BASE_URL.replace(/\/+$/, "");
-
     setLoading(true);
     setMessage("");
 
     try {
-      const res = await fetch(
-        `${baseUrl}/api/auth/password-reset/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      const data = await res.json();
-      setMessage(data.detail || "Check your inbox for a reset link.");
-    } catch (err) {
-      logger.exception(err, { where: 'auth.forgotPassword.submit' });
+      const result = await forgotPasswordAction(email);
+      
+      if (result.success) {
+        setMessage("Check your inbox for a reset link.");
+      } else {
+        setMessage(result.error || "Something went wrong. Please try again.");
+      }
+    } catch {
       setMessage("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

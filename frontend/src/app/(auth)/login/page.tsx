@@ -1,13 +1,12 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { authAPI } from '@/lib/api'
 import { LoginForm } from '@/components/User/login-form'
 import { useNotification } from '@/hooks/useNotification'
-import { setAuthToken, setCurrentUser } from '@/lib/utils/auth-utils'
+import { loginAction } from '@/lib/auth/actions'
 
 type LoginData = {
   email: string
@@ -16,16 +15,19 @@ type LoginData = {
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const notify = useNotification()
 
   const handleLogin = async (data: LoginData) => {
-    const response = await authAPI.login(data.email, data.password)
+    // Use server action for login
+    const response = await loginAction(data.email, data.password)
     
     if (response.success) {
-      await setAuthToken(response.token)
-      setCurrentUser(response.user)
       notify.success('Login Successful', 'Welcome back!', 2000)
-      router.push('/dashboard')
+      // Redirect to the page user was trying to access, or dashboard
+      const redirectTo = searchParams.get('redirect') || '/dashboard'
+      router.push(redirectTo)
+      router.refresh() // Refresh to update server components
     } else {
       const errorMsg = response.error || 'Login failed'
       notify.loginFailed(errorMsg)

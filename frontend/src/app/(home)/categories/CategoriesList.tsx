@@ -10,7 +10,6 @@ import { Crown, Lock, Eye, Pencil, Info, Search, ChevronDown } from 'lucide-reac
 import { ProcessingButton } from '@/components/ui/button2';
 import { useNotification } from '@/hooks/useNotification';
 import Image from 'next/image';
-import { useMembership } from '@/hooks/useMembership';
 import { categoriesAPI } from '@/lib/api';
 import { useImageError } from '@/hooks/useImageError';
 import { useHeader } from '@/contexts/HeaderContext';
@@ -24,10 +23,13 @@ type AllCategoryData = {
 
 type Props = {
   initialData: AllCategoryData | null;
+  userIsPremium: boolean;
+  userId: number;
 };
 
-export default function CategoriesList({ initialData }: Props) {
-  const { membership, currentUserId, isLoaded } = useMembership();
+export default function CategoriesList({ initialData, userIsPremium, userId }: Props) {
+  // Premium status and userId come from server-side session
+  const currentUserId = userId;
   const [error, setError] = useState<string>('');
   const notify = useNotification();
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
@@ -163,8 +165,8 @@ export default function CategoriesList({ initialData }: Props) {
     return illustrationMap[categoryName];
   };
 
-  const handleCategoryToggle = (categoryId: number, isPremium: boolean) => {
-    if (isPremium && !membership?.is_premium) {
+  const handleCategoryToggle = (categoryId: number, categoryIsPremium: boolean) => {
+    if (categoryIsPremium && !userIsPremium) {
       setError('This category is available for premium members only');
       return;
     }
@@ -200,7 +202,7 @@ export default function CategoriesList({ initialData }: Props) {
     return true;
   };
 
-  if (isLoading || !isLoaded) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-eastern-blue-50 flex items-center justify-center">
         <BounceLoader />
@@ -322,14 +324,14 @@ export default function CategoriesList({ initialData }: Props) {
                   
                   {collection.categories?.map((category) => {
                     const isSelected = selectedCategories.includes(category.id);
-                    const isPremium = category.is_premium;
-                    const canSelect = !isPremium || membership?.is_premium;
+                    const categoryIsPremium = category.is_premium;
+                    const canSelect = !categoryIsPremium || userIsPremium;
                     const isLocked = !isSelected && selectedCategories.length >= 6; // Lock unselected categories when 6 are selected
                     const playedPercent = getPlayedPercentage(category);
                 return (
                   <button
                     key={category.id}
-                    onClick={() => handleCategoryToggle(category.id, isPremium)}
+                    onClick={() => handleCategoryToggle(category.id, categoryIsPremium)}
                     disabled={!canSelect || isLocked}
                     className={`relative w-full aspect-[3/4] min-h-[200px] sm:min-h-[220px] overflow-hidden border-4 rounded-4xl transition-all duration-200 transform hover:scale-105 ${
                       isSelected
@@ -419,7 +421,7 @@ export default function CategoriesList({ initialData }: Props) {
                           </div>
                         )}
                         {/* Locked Overlay */}
-                        {isPremium && !membership?.is_premium && (
+                        {categoryIsPremium && !userIsPremium && (
                           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center z-10">
                             <Lock className="h-8 w-8 text-white mb-2" />
                             <span className="text-white text-xs font-semibold">Premium</span>
@@ -433,7 +435,7 @@ export default function CategoriesList({ initialData }: Props) {
                         {category.name}
                       </h3>
                       {/* Premium/Lock Indicator */}
-                      {isPremium && (
+                      {categoryIsPremium && (
                         <div className="absolute top-1 text-center">
                           {canSelect ? (
                             <Crown className="h-3 w-3 md:h-4 md:w-4 text-yellow-400" />

@@ -14,13 +14,17 @@ import { useAuthGate } from '@/hooks/useAuthGate';
 import { useImageError } from '@/hooks/useImageError';
 import { useCategoriesData } from '@/hooks/useCategoriesData';
 import { VerifyIcon } from '@/components/ui/verify-badge';
-import { useMembership } from '@/hooks/useMembership';
 import { useHeader } from '@/contexts/HeaderContext';
 import { logger } from '@/lib/utils/logger';
 import BounceLoader from '@/components/ui/loadingscreen';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';
 
-export default function Client() {
+interface Props {
+  userIsPremium: boolean;
+  userId: number;
+}
+
+export default function Client({ userIsPremium, userId }: Props) {
   const [showProfile, setShowProfile] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [search, setSearch] = useState('');
@@ -29,7 +33,6 @@ export default function Client() {
   const router = useRouter();
   const { setHeader } = useHeader();
   const { user, isLoading: authLoading } = useAuthGate();
-  const { membership } = useMembership();
   const { handleError: handleImageError, hasError: hasImageError } = useImageError<number>();
   const { categories, isLoading: isLoadingCategories, error: categoriesError } = useCategoriesData('user');
   const [error, setError] = useState('');
@@ -167,7 +170,7 @@ export default function Client() {
     
     // Check if user is premium or owns the category
     const isOwner = user && category.created_by_id === user.id;
-    const isPremium = membership?.is_premium;
+    const isPremium = userIsPremium;
     
     if (!isOwner && !isPremium) {
       setError('Saving categories is a premium feature. Upgrade to premium to save categories created by others!');
@@ -179,7 +182,7 @@ export default function Client() {
       categoryId: category.id,
       isSaved: category.is_saved || false,
     });
-  }, [user, membership?.is_premium, saveMutation]);
+  }, [user, userIsPremium, saveMutation]);
 
   const handleLikeCategory = useCallback(async (e: React.MouseEvent, category: Category) => {
     e.stopPropagation();
@@ -345,7 +348,7 @@ export default function Client() {
                 filteredCategories.map((category) => {
                   const isOwner = user && category.created_by_id === user.id;
                   const isPending = isOwner && !category.is_approved;
-                  const canSave = isOwner || membership?.is_premium;
+                  const canSave = isOwner || userIsPremium;
 
                   return (
                     <div

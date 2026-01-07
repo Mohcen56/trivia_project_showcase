@@ -4,10 +4,7 @@ import HeaderAvatar from "@/components/HeaderAvatar";
 import HeroCTA from "@/components/HeroCTA";
 import { Timer,GalleryHorizontalEnd  } from "lucide-react";
 
-export default function HomePage() {
-
- 
-  
+export default async function HomePage() {
   return (
     <>
       <div className="bg-gradient-to-b from-cyan-900 to-cyan-800">

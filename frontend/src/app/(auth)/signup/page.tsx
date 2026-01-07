@@ -4,10 +4,9 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { authAPI } from '@/lib/api/index';
 import { SignupForm } from '@/components/User/signup-form';
 import { useNotification } from '@/hooks/useNotification';
-import { setAuthToken, setCurrentUser } from '@/lib/utils/auth-utils';
+import { registerAction } from '@/lib/auth/actions';
 
 type SignupData = {
   email: string;
@@ -21,17 +20,17 @@ export default function SignupPage() {
   const notify = useNotification();
 
   const handleSignup = async (data: SignupData) => {
-    const response = await authAPI.register({
+    // Use server action for registration
+    const response = await registerAction({
       email: data.email,
       password: data.password,
       username: data.username,
     });
     
     if (response?.success) {
-      await setAuthToken(response.token);
-      setCurrentUser(response.user);
       notify.accountVerified();
       router.push('/dashboard');
+      router.refresh(); // Refresh to update server components
     } else {
       const errorMsg = response?.error || 'Signup failed';
       notify.error('Signup Failed', errorMsg);

@@ -6,7 +6,6 @@
  * Client code should NOT access or store tokens directly.
  */
 
-import type { User } from '@/types/game';
 import { logger } from './logger';
 
 /**
@@ -53,32 +52,14 @@ export const removeAuthToken = async (): Promise<void> => {
   }
 };
 
-export const getCurrentUser = (): User | null => {
-  if (typeof window === 'undefined') return null;
-  const userData = localStorage.getItem('user');
-  return userData ? JSON.parse(userData) : null;
-};
-
-export const setCurrentUser = (user: User): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('user', JSON.stringify(user));
-};
-
-export const removeCurrentUser = (): void => {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem('user');
-};
-
-// Membership storage removed; user now carries premium fields.
-export const removeMembership = (): void => {
-  if (typeof window === 'undefined') return;
-  // Cleanup legacy key if present
-  localStorage.removeItem('membership');
-};
-
+/**
+ * Clears all authentication data.
+ * Token and user data are now managed via server-side session.
+ */
 export const clearAuthData = async (): Promise<void> => {
   if (typeof window === 'undefined') return;
   await removeAuthToken();
-  removeCurrentUser();
-  removeMembership();
+  // Cleanup legacy localStorage keys if present
+  localStorage.removeItem('user');
+  localStorage.removeItem('membership');
 };

@@ -205,6 +205,9 @@ src/
 │       ├── logger.ts         # Structured logging
 │       └── cn.ts             # Tailwind class merger
 │
+├── lib/config/               # Configuration
+│   └── constants.ts          # Centralized app constants
+│
 ├── store/                    # Redux Store
 │   ├── index.ts              # Store configuration
 │   ├── authSlice.ts          # Auth state (user only, no token)
@@ -212,6 +215,8 @@ src/
 │   └── hooks.ts              # Typed Redux hooks
 │
 ├── providers/                # React Context Providers
+│   ├── Providers.tsx         # Unified provider wrapper
+│   ├── SessionProvider.tsx   # User session context
 │   ├── QueryProvider.tsx     # TanStack Query
 │   └── NotificationProvider.tsx
 │
@@ -335,6 +340,39 @@ const { data, isLoading } = useQuery({
 });
 ```
 
+### Session Provider (User Context)
+
+User session data is fetched server-side and provided via React Context:
+
+```typescript
+// Root layout fetches session
+export default async function RootLayout({ children }) {
+  const session = await getSession();
+  return (
+    <Providers user={session.user} isPremium={session.isPremium}>
+      {children}
+    </Providers>
+  );
+}
+
+// Any component can access user data
+function MyComponent() {
+  const { user, isPremium } = useSession();
+  // Fresh data on every server render, no stale Redux cache
+}
+```
+
+**Provider Hierarchy:**
+```
+GoogleOAuthProvider
+  └── QueryProvider (TanStack Query)
+        └── ReduxProvider (Redux Toolkit)
+              └── SessionProvider (User Context)
+                    └── ErrorBoundary
+                          └── NotificationProvider
+                                └── {children}
+```
+
 ---
 
 ## 📱 Responsive Design
@@ -399,6 +437,12 @@ SENTRY_AUTH_TOKEN=your-sentry-token
 ## 📄 License
 
 This project is proprietary software. See [LICENSE](LICENSE) for details.
+
+---
+
+## 📋 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for recent updates and architecture changes.
 
 ---
 

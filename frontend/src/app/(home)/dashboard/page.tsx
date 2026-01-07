@@ -1,25 +1,11 @@
-'use client';
-
 import Link from 'next/link';
 import { Play, History } from 'lucide-react';
-import { useAuthGate } from '@/hooks/useAuthGate';
+import { requireAuth } from '@/lib/auth';
 
-import BounceLoader from '@/components/ui/loadingscreen';
-
-export default function HomePage() {
-  
-  const {isLoading } = useAuthGate({ redirectIfGuest: '/login' });
- 
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-custom-bg flex items-center justify-center">
-        <BounceLoader />
-      </div>
-    );
-  }
-
- 
+// Server Component - auth is handled server-side via middleware + requireAuth
+export default async function DashboardPage() {
+  // This will redirect to /login if not authenticated
+  await requireAuth();
 
   return (
     <div className="min-h-screen bg-custom-bg">

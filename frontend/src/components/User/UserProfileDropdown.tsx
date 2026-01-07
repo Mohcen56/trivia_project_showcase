@@ -1,10 +1,10 @@
 "use client";
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuthGate } from "@/hooks/useAuthGate";
-import { useMembership } from "@/hooks/useMembership"; // ✅ import your hook
+import { logoutAction } from "@/lib/auth/actions";
 import { VerifyIcon } from "@/components/ui/verify-badge";
+import { useSession } from "@/providers/SessionProvider";
 
 const Icon = {
   User: (p: React.SVGProps<SVGSVGElement>) => (
@@ -41,17 +41,19 @@ const Icon = {
   ),
 };
 
+interface UserDropdownProps {
+  align?: "left" | "right";
+}
 
-
-
-
-export default function UserDropdown({ align = "left" } ) {
-  const { user, isLoading, logout } = useAuthGate();
-  const { membership, isLoaded } = useMembership(); // ✅ get membership info
-
+export default function UserDropdown({ align = "left" }: UserDropdownProps) {
+  const { user } = useSession();
   const [open, setOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Check if user is premium from the user object itself
+  const isPremium = user?.is_premium ?? false;
 
   const avatarSrc = useMemo(() => {
     if (!user?.avatar || user.avatar === "/avatars/thumbs.svg")
@@ -59,18 +61,25 @@ export default function UserDropdown({ align = "left" } ) {
     return user.avatar;
   }, [user?.avatar]);
 
-  
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logoutAction();
+    router.push("/login");
+  };
 
+  // Close dropdown when clicking outside
+  const handleClickOutside = (e: MouseEvent) => {
+    if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+  };
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+  // Add event listener for clicks outside
+  React.useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (isLoading || !isLoaded) return null;
+  // Don't render if no user
+  if (!user) return null;
 
   const sideClass = align === "left" ? "left-0" : "right-0";
   const arrowSide = align === "left" ? "left-4" : "right-4";
@@ -125,7 +134,7 @@ export default function UserDropdown({ align = "left" } ) {
                 <div>
                   <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                     {user.username}
-                    {membership?.is_premium && (
+                    {isPremium && (
                       <VerifyIcon type="premium" size="xs" />
                     )}
                   </div>
@@ -157,12 +166,9 @@ export default function UserDropdown({ align = "left" } ) {
                 <div className="my-2 h-px bg-zinc-200 dark:bg-zinc-700" />
                 <MenuItem
                   icon={<Icon.LogOut />}
-                  text="Sign Out"
+                  text={isLoggingOut ? "Signing out..." : "Sign Out"}
                   danger
-                  onClick={() => {
-                    logout();
-                    router.push("/login");
-                  }}
+                  onClick={handleLogout}
                 />
              
             

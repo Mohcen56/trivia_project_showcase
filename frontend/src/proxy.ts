@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Next.js Middleware for Route Protection
+ * Next.js Proxy for Server-Side Route Protection
  * 
  * SECURITY: Auth checks happen on the server using HttpOnly cookies.
- * This prevents unauthenticated users from accessing protected routes.
+ * This prevents unauthenticated users from accessing protected routes
+ * BEFORE any client-side code runs.
  */
 
 // Routes that require authentication
@@ -18,14 +19,25 @@ const protectedRoutes = [
   '/categories',
   '/teams',
   '/membership',
+  '/plans',
 ];
 
 // Routes that should redirect TO home if already authenticated
-const authRoutes = ['/login', '/signup'];
+const authRoutes = ['/login', '/signup', '/ForgotPassword', '/ResetPassword'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const authToken = request.cookies.get('authToken')?.value;
+
+  // Skip proxy for API routes, static files, etc.
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon') ||
+    pathname.includes('.') // static files
+  ) {
+    return NextResponse.next();
+  }
 
   // Check if accessing a protected route without auth
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -39,10 +51,14 @@ export function middleware(request: NextRequest) {
   }
 
   // Check if accessing auth routes while already authenticated
-  const isAuthRoute = authRoutes.some(route => pathname === route);
+  const isAuthRoute = authRoutes.some(route => 
+    pathname === route || pathname.startsWith(`${route}/`)
+  );
   
   if (isAuthRoute && authToken) {
-    return NextResponse.redirect(new URL('/', request.url));
+    // Get redirect URL from query params, or default to dashboard
+    const redirect = request.nextUrl.searchParams.get('redirect') || '/dashboard';
+    return NextResponse.redirect(new URL(redirect, request.url));
   }
 
   return NextResponse.next();
@@ -52,12 +68,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - api routes (handled separately)
+     * - api routes (already handled above but explicit here)
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt
-     * - public folder assets
+     * - favicon.ico, icons, images, etc.
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|avatars|icons|logo|ads.txt).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|icons|logo|avatars|.*\\..*|og-image).*)',
   ],
 };

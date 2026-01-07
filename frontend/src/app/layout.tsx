@@ -2,12 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import ReduxProvider from "@/components/utils/ReduxProvider";
-import { QueryProvider } from "@/providers/QueryProvider";
-import ErrorBoundary from "@/components/utils/ErrorBoundary";
-import { NotificationProvider } from "@/providers/NotificationProvider";
+import { Providers } from "@/providers/Providers";
 import { Analytics } from '@vercel/analytics/next';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { getSession } from "@/lib/auth/session";
 
 import Script from "next/script";
 const geistSans = Geist({
@@ -120,12 +117,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const session = await getSession();
   
   return (
     <html lang="en" dir="ltr">
@@ -214,18 +212,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID || ""}>
-          <QueryProvider>
-            <ReduxProvider>
-              <ErrorBoundary>
-                <NotificationProvider>
-                  {children}<SpeedInsights />
-                   <Analytics />
-                </NotificationProvider>
-              </ErrorBoundary>
-            </ReduxProvider>
-          </QueryProvider>
-        </GoogleOAuthProvider>
+        <Providers user={session.user} isPremium={session.isPremium}>
+          {children}
+          <SpeedInsights />
+          <Analytics />
+        </Providers>
       </body>
     </html>
   );

@@ -1,7 +1,6 @@
 "use client";
 import React, { useState} from "react";
-import { logger } from "@/lib/utils/logger";
-import { API_BASE_URL } from "@/lib/api/base";
+import { resetPasswordAction } from "@/lib/auth/actions";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -34,31 +33,18 @@ const ResetPassword = () => {
     setLoading(true);
     setMessage("");
 
-    if (!API_BASE_URL) {
-      setMessage("Service is temporarily unavailable. Please contact support.");
-      setLoading(false);
-      return;
-    }
-
-    const baseUrl = API_BASE_URL.replace(/\/+$/, "");
-
     try {
-      const res = await fetch(`${baseUrl}/api/auth/password-reset-confirm/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, token, new_password: password }),
-      });
-
-      const data = await res.json();
-      setMessage(data.detail);
-
-      if (res.ok) {
+      const result = await resetPasswordAction(uid, token, password);
+      
+      if (result.success) {
         setSuccess(true);
-        // Optionally redirect after 3s
+        setMessage(result.message || "Password reset successfully!");
+        // Redirect after 3s
         setTimeout(() => router.push("/login"), 3000);
+      } else {
+        setMessage(result.error || "Something went wrong. Please try again.");
       }
-    } catch (err) {
-      logger.exception(err, { where: 'auth.resetPassword.submit' });
+    } catch {
       setMessage("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

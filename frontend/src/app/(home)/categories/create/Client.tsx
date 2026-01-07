@@ -8,16 +8,17 @@ import { ImagePlus, Lock, Globe } from 'lucide-react';
 import ImageCropModal from '@/components/utils/ImageCropModal';
 import { useHeader } from '@/contexts/HeaderContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { useMembership } from '@/hooks/useMembership';
 import { ProcessingButton } from '@/components/ui/button2';
 
+interface Props {
+  userIsPremium: boolean;
+}
 
-export default function Client() {
+export default function Client({ userIsPremium }: Props) {
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
   const { setHeader } = useHeader();
-  const { membership } = useMembership();
-  const isPremium = membership?.is_premium;
+  const isPremium = userIsPremium;
   
   // Form state
   const [categoryName, setCategoryName] = useState('');
