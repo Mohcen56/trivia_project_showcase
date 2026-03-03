@@ -36,7 +36,7 @@
 ## ✨ Features
 
 ### 🎯 Core Gameplay
-- **Team-Based Trivia** – Create teams and compete in real-time trivia battles
+- **Team-Based Trivia** – Create teams and compete in  trivia battles
 - **Custom Categories** – Browse, create, and save your favorite trivia categories
 - **Thousands of Questions** – Curated questions across history, science, movies, anime, sports & more
 - **Turn-Based System** – Fair turn tracking with team rotation
